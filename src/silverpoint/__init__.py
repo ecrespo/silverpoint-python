@@ -16,7 +16,7 @@ from ._catalog import VENDOR, host_catalog
 from .chart import Chart
 from .errors import RuntimeUnavailable, SpecError
 
-__version__ = "0.11.0"
+__version__ = "0.11.0.post1"
 SILVERPOINT_VERSION: str = host_catalog()["version"]
 
 

@@ -1,6 +1,6 @@
 [project]
 name = "silverpoint"
-version = "0.11.0"
+version = "0.11.0.post1"
 description = "silverpoint charts from Python: notebooks, Flask, Django and static HTML, drawn by the library's own standalone script."
 readme = "README.md"
 license = "MIT"

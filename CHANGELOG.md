@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.11.0 (unreleased)
+## 0.11.0 (2026-11-22)
 
 First release, vendoring `@silverpoint/embed` 0.11.0 from the hosts kit attached to silverpoint's
 `v0.11.0` release (built test-first against 0.10.1's local build, which carries the same API).

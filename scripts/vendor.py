@@ -5,7 +5,8 @@
     uv run python scripts/vendor.py --check              # verify the checked-in files (CI)
 
 Every script is verified against ``integrity.json`` (SHA-384) before anything is written, and the host
-catalog's version must equal the scripts' version.
+catalog's version must equal the scripts' version. ``props.json`` is derived here from the engine: the
+props ``validateSpec`` takes per chart, wider than the host catalog's options (issue #2).
 """
 
 from __future__ import annotations
@@ -47,6 +48,50 @@ def sri(data: bytes) -> str:
     return "sha384-" + base64.b64encode(hashlib.sha384(data).digest()).decode()
 
 
+# The fields of a spec that `validateSpec` refuses inside `props` (the package takes them as arguments).
+SPEC_FIELDS = ("data", "width", "height", "id", "ground", "substrate", "mode", "palette")
+JS_STRINGS = r'\[(?:"[A-Za-z0-9_-]+",?)*\]'
+
+
+def engine_props(script: str, catalog: dict) -> dict:
+    """The props ``validateSpec`` takes for each chart, read from the engine's own tables (issue #2).
+
+    The host catalog declares a chart's *options*; the engine also takes the chart's other props
+    (``names``, ``nodes``) and a common set wider than the catalog's ``common``. Neither table is
+    exported, so they are found by content, not by their minified names: the one object literal keyed
+    by exactly the catalog's slugs, and the one string array holding every common option.
+    """
+    slugs = {c["slug"] for c in catalog["charts"]}
+    tables = []
+    for match in re.finditer(
+        r'\{"[a-z0-9-]+":' + JS_STRINGS + r'(?:,"[a-z0-9-]+":' + JS_STRINGS + r")*\}", script
+    ):
+        table = json.loads(match.group(0))
+        if set(table) == slugs:
+            tables.append(table)
+    common_names = {o["name"] for o in catalog["common"]}
+    commons = [
+        names
+        for match in re.finditer(JS_STRINGS, script)
+        if common_names <= set(names := json.loads(match.group(0))) and "data" in names
+    ]
+    if len(tables) != 1 or len(commons) != 1:
+        raise ValueError(
+            f"the engine's prop tables are not found unambiguously ({len(tables)} chart tables, "
+            f"{len(commons)} common lists)"
+        )
+    return {
+        "common": [n for n in commons[0] if n not in SPEC_FIELDS],
+        "charts": {c["slug"]: tables[0][c["slug"]] for c in catalog["charts"]},
+    }
+
+
+def write_props(folder: Path) -> None:
+    catalog = json.loads((folder / "host-catalog.json").read_text(encoding="utf-8"))
+    props = engine_props((folder / SCRIPTS[1]).read_text(encoding="utf-8"), catalog)
+    (folder / "props.json").write_text(json.dumps(props, indent=1) + "\n", encoding="utf-8")
+
+
 def verify(folder: Path) -> list[str]:
     """Problems with a vendored folder: digests, versions, the files a wheel needs."""
     problems = []
@@ -70,6 +115,14 @@ def verify(folder: Path) -> list[str]:
         )
     if kit["version"] != catalog["version"]:
         problems.append(f"conformance.json {kit['version']} is not the host catalog's {catalog['version']}")
+    try:
+        props = engine_props((folder / SCRIPTS[1]).read_text(encoding="utf-8"), catalog)
+        if not (folder / "props.json").is_file():
+            problems.append("missing props.json")
+        elif json.loads((folder / "props.json").read_text(encoding="utf-8")) != props:
+            problems.append("props.json is not the engine's prop tables (run vendor.py again)")
+    except ValueError as error:
+        problems.append(f"{SCRIPTS[1]}: {error}")
     for needed in ("OFL.txt", "html-goldens/cases.json", "tables/rows.json"):
         if not (folder / needed).is_file():
             problems.append(f"missing {needed}")
@@ -143,6 +196,7 @@ def main() -> int:
             from_release(args.version, staging)
         else:
             parser.error("give a version, --from PATH or --check")
+        write_props(staging)
         problems = verify(staging)
         if problems:
             for p in problems:

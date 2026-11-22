@@ -150,3 +150,86 @@ EDGES = [
 )
 def test_edges_equal_spec_from_table(chart, expected):
     assert chart.spec == expected
+
+
+# Issue #2: the catalog's demos pass `demo.options`, and `specFromTable` takes every prop the engine
+# knows for the chart, not only the declared options (`names`, `nodes`).
+DEMOS = [c for c in silverpoint.catalog["charts"] if c["binding"] != "none"]
+
+
+def from_demo(chart):
+    demo = chart["demo"]
+    return Chart(chart["slug"], demo["rows"], roles=demo["roles"], options=demo.get("options"))
+
+
+@pytest.mark.parametrize("chart", DEMOS, ids=[c["slug"] for c in DEMOS])
+def test_every_demo_builds_with_its_options(chart):
+    """PY-REQ-001, PY-REQ-004: a demo with `demo.options` is a valid binding."""
+    props = from_demo(chart).spec["props"]
+    for name, value in (chart["demo"].get("options") or {}).items():
+        assert props[name] == value
+
+
+@pytest.mark.parametrize("slug", ["dumbbell-chart", "slope-chart", "network-chart"])
+def test_unknown_prop_is_still_refused(slug):
+    """PY-REQ-004: a prop the engine does not know is refused as `specFromTable` refuses it."""
+    demo = next(c for c in DEMOS if c["slug"] == slug)["demo"]
+    with pytest.raises(SpecError) as raised:
+        Chart(slug, demo["rows"], roles=demo["roles"], options={"bogus": 1})
+    assert raised.value.kind == "prop"
+    assert raised.value.props == ["bogus"]
+
+
+def test_engine_props_beyond_the_declared_options():
+    """PY-REQ-001: undeclared props `specFromTable` accepts (`seed`, `numberFormat`) pass through."""
+    chart = Chart(
+        "bar-chart",
+        [{"a": "x", "b": 1}],
+        roles={"x": "a", "value": "b"},
+        options={"seed": 3, "number_format": "0.0"},
+    )
+    assert chart.spec["props"]["seed"] == 3
+    assert chart.spec["props"]["numberFormat"] == "0.0"
+
+
+SPEC_FROM_TABLE = """
+const sp = await import(process.argv[1]);
+let input = '';
+for await (const chunk of process.stdin) input += chunk;
+const out = JSON.parse(input).map((b) => sp.specFromTable(b));
+process.stdout.write(JSON.stringify(out));
+"""
+
+
+@pytest.mark.node
+def test_every_demo_equals_spec_from_table():
+    """PY-REQ-001: each demo's spec, with `demo.options`, is the one `specFromTable` returns in Node."""
+    import json
+    import shutil
+    import subprocess
+
+    bindings = [
+        {
+            "chart": c["slug"],
+            "table": {"rows": c["demo"]["rows"]},
+            "roles": c["demo"]["roles"],
+            "options": c["demo"].get("options") or {},
+        }
+        for c in DEMOS
+    ]
+    result = subprocess.run(
+        [
+            shutil.which("node"),
+            "--input-type=module",
+            "-e",
+            SPEC_FROM_TABLE,
+            (VENDOR / "silverpoint-embed.full.mjs").as_uri(),
+        ],
+        input=json.dumps(bindings),
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    for chart, expected in zip(DEMOS, json.loads(result.stdout), strict=True):
+        assert expected["ok"], (chart["slug"], expected)
+        assert from_demo(chart).spec == expected["value"], chart["slug"]

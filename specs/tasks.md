@@ -1,6 +1,7 @@
 # `silverpoint-python` — Tasks
 
-> Split from `specs/spec-pack.md` (silverpoint feature-007, `repositories/`), content unchanged.
+> Split from `specs/spec-pack.md` (silverpoint feature-007, `repositories/`). Since then: delta-001
+> (Databricks; approved 2026-11-22) adds PY-T-14..16 and answers part of PY-OQ-1.
 
 ## Tasks
 
@@ -16,13 +17,25 @@
 - [x] **PY-T-10** `svg.py` and `scripts/conformance.mjs`; the kit in CI. *PY-REQ-009, PY-REQ-015, H-4*
 - [x] **PY-T-11** `contrib/flask.py` with an example app and the CSP browser test. *PY-REQ-011, PY-REQ-013*
 - [x] **PY-T-12** `contrib/django` with an example project and the CSP browser test. *PY-REQ-012, PY-REQ-013*
-- [ ] **PY-T-13** `catalog`, versions, `static_path`; README with one example per host (Jupyter, Databricks `displayHTML(chart.to_html())`, Flask, Django); release `0.11.0`. *PY-REQ-010*
+- [x] **PY-T-13** `catalog`, versions, `static_path`; README with one example per host (Jupyter, Databricks `displayHTML(chart.to_html())`, Flask, Django); release `0.11.0`. *PY-REQ-010*
+- [x] **PY-T-14** Spark inputs and the row limit, tested against a local Spark session (pyspark in
+  the `spark` dependency group, CI job `spark`). *PY-REQ-002, PY-REQ-017 (delta-001)*
+- [x] **PY-T-15** `enable()` in Databricks; the size bounds. *PY-REQ-008, PY-REQ-018 (delta-001)*
+- [x] **PY-T-16** `examples/notebooks/databricks.py` (Databricks source format), executed by a test
+  with Databricks' globals stubbed; README section. *PY-REQ-007, PY-REQ-017 (delta-001)*
 
 ## Open questions
 
 - **PY-OQ-1** Databricks: does `displayHTML` accept the document size of the `full` file per cell
   without truncation? Measure in PY-T-09 on Free Edition; the fallback is the script served from a
   workspace file.
+  *Partly answered from Databricks' documentation (delta-001, 2026-11-21):* one cell's output may be
+  10 MB by default on Runtime 17+ and serverless environment 3 (1–20 MB with
+  `%set_cell_max_output_size_in_mb`); a chart's frame is about 0.58 MB with a small table and about
+  1.1 MB at 10,000 rows, so one chart per cell fits the default, and up to 100 rows fits even 1 MB
+  (PY-REQ-018). A notebook's revision snapshots stop at 10 MB on AWS, about fifteen inline charts; the
+  fallback stays the script served from a workspace file (`to_html(script=<url>)`), never a CDN.
+  **Still open:** the measurement in a workspace (Free Edition), and the 16.4-and-older runtimes.
 - **PY-OQ-2** An optional extra with an embedded JavaScript engine for `to_svg` without Node: only
   if users ask.
 
@@ -71,11 +84,10 @@ clean; `node scripts/conformance.mjs`: 76 passed, 0 failed.
 
 ### Open
 
-- PY-T-13: the release itself — the pending trusted publisher on PyPI, then tag `v0.11.0` on `main`.
-  Everything before it is done (2026-11-22, below).
+- ~~PY-T-13~~ released 2026-11-22 (below).
 - PY-OQ-1: partly answered from Databricks' documented limits (delta-001); the measurement in a
   workspace (Free Edition) is still open.
-- delta-001 (Databricks: PY-T-14..16) implemented 2026-11-21; to review, then fold into `specs/`.
+- ~~delta-001~~ approved and folded into `specs/` 2026-11-22; archived in `changes/archive/`.
 
 
 ## Ledger (2026-11-22) — PY-T-13 up to the release
@@ -95,3 +107,37 @@ clean; `node scripts/conformance.mjs`: 76 passed, 0 failed.
 - Cross-check with `reflex-silverpoint-react` 0.11.0 (`reflex-catalog.json`): the same 60 charts; every
   Python builder has the Reflex builder's name; the four without one (`orbit-chart`, `sparkline-rows`,
   `treemap-chart`, `volvelle-chart`) have `binding: none`.
+
+## Ledger (2026-11-22) — release and delta-001
+
+- **PY-T-13 done.** PR #1 (`develop` → `main`) with CI green (test 3.10 and 3.13, spark, bare); tag
+  `v0.11.0`; `release.yml` published `silverpoint` 0.11.0 to PyPI through Trusted Publishing
+  (wheel `py3-none-any` and sdist). A fresh install from PyPI (Python 3.12) reports `0.11.0` / `0.11.0`
+  and writes a self-contained page with no CDN URL. GitHub release `v0.11.0` with the CHANGELOG's notes.
+- **delta-001 approved** (user decision, 2026-11-22) and folded: PY-REQ-002, PY-REQ-008 amended,
+  PY-REQ-017, PY-REQ-018 added (`prd.md`); PY-DD-06 and a note to PY-DD-04 (`technical-design.md`);
+  pyspark named in PY-Art. 2 (`constitution.md`); PY-T-14..16 and PY-OQ-1 here. Its implementation
+  was already in 0.11.0, re-verified against the requirement text: `limit(SPARK_ROW_LIMIT + 1)`, Arrow
+  before pandas, `ValueError` naming the limit, the `RuntimeWarning` in Databricks, the size bounds in
+  `test_notebook.py`.
+
+## Ledger (2026-11-22) — issue #2, `demo.options` refused
+
+- **Cause.** `spec._check_options` accepted only `options_of(entry)` (the catalog's options plus
+  `common`). `specFromTable` passes `options` into `props` and `validateSpec` checks them against the
+  engine's per-chart prop table plus a common list, minus the spec fields: wider than the catalog
+  (`names`, `nodes`; `seed`, `numberFormat`, `className`). PY-REQ-001 broke for those inputs.
+- **Fix.** `vendor.py` derives `_vendor/props.json` from the vendored `.mjs` (tables found by content —
+  the object keyed by exactly the catalog's slugs, the array holding every common option — not by
+  minified names; ambiguity fails the vendoring) and `verify()` / `--check` re-derive and compare.
+  `_check_options` accepts those props; declared options keep their `values` check. Regenerated with
+  `vendor.py 0.11.0`: the only change under `_vendor/` is the new `props.json`.
+- **Tests first** (red, then green): `test_spec.py::test_every_demo_builds_with_its_options` (all 56
+  bindable demos), `::test_every_demo_equals_spec_from_table` (Node), `::test_unknown_prop_is_still_refused`,
+  `::test_engine_props_beyond_the_declared_options`; `test_vendor.py::test_wheel_contents` includes
+  `props.json`. `uv run pytest`: 168 passed, 2 skipped (pyspark not installed); `ruff`,
+  `vendor.py --check`, `make_builders.py --check` clean.
+- Not changed: an appearance or size key inside `options` (`ground`) is still `kind == "prop"` here,
+  where `specFromTable` says `shape` ("give it as a field of the spec"). Builders still expose only the
+  declared options.
+

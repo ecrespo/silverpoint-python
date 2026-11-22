@@ -12,7 +12,8 @@
 - **PY-DD-02 — Vendoring is a build step, checked in.** `scripts/vendor.py X.Y.Z` downloads the
   hosts kit of the GitHub release `vX.Y.Z` (or the npm tarball) —`silverpoint-embed.full.js`,
   `.full.mjs`, `host-catalog.json`, `conformance.json`, `integrity.json`, the HTML goldens and the
-  table fixtures— verifies digests, and
+  table fixtures— verifies digests, derives `props.json` (the props the engine's `validateSpec` takes
+  per chart, read from the script's own tables: wider than the host catalog's options, issue #2), and
   writes `src/silverpoint/_vendor/`. The files are committed, so an sdist builds offline and a
   reviewer sees the diff. CI re-runs it with `--check`.
 - **PY-DD-03 — Builders are generated.** `scripts/make_builders.py` writes `_builders.py` and its
@@ -42,7 +43,7 @@ src/silverpoint/
   __init__.py  chart.py  data.py  spec.py  reshape.py  html.py  notebook.py  svg.py  errors.py
   _builders.py (generated)   _builders.pyi (generated)
   _vendor/  silverpoint-embed.full.js  silverpoint-embed.full.mjs  host-catalog.json
-            conformance.json  integrity.json  html-goldens/  OFL.txt
+            conformance.json  integrity.json  props.json (derived)  html-goldens/  OFL.txt
   contrib/flask.py
   contrib/django/  __init__.py  apps.py  templatetags/silverpoint.py  static/silverpoint/ (symlinked or copied at build)
 scripts/  vendor.py  make_builders.py  conformance.mjs

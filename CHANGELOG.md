@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased (0.11.0.post1)
+
+- Fix (#2): `Chart` and the builders refused props that `specFromTable` accepts but the host catalog
+  does not declare as options — `names` (`dumbbell-chart`, `slope-chart`), `nodes` (`network-chart`),
+  and the common `seed`, `numberFormat`, `className`. The catalog's demos with `demo.options` now
+  build, and their specs equal `specFromTable`'s. An unknown prop is still a `SpecError` of kind
+  `prop`. `vendor.py` derives the accepted props from the vendored engine into `_vendor/props.json`;
+  `--check` verifies it.
+
 ## 0.11.0 (2026-11-22)
 
 First release, vendoring `@silverpoint/embed` 0.11.0 from the hosts kit attached to silverpoint's

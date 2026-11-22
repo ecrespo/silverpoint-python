@@ -46,7 +46,13 @@ def test_wheel_contents(tmp_path):
     import zipfile
 
     names = zipfile.ZipFile(wheel).namelist()
-    for needed in ("silverpoint-embed.full.js", "host-catalog.json", "integrity.json", "OFL.txt"):
+    for needed in (
+        "silverpoint-embed.full.js",
+        "host-catalog.json",
+        "props.json",
+        "integrity.json",
+        "OFL.txt",
+    ):
         assert any(n.endswith("_vendor/" + needed) for n in names), needed
     assert any(n.endswith("templatetags/silverpoint.py") for n in names)
 

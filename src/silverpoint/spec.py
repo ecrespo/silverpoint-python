@@ -6,7 +6,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from ._catalog import charts, host_catalog, options_of, snake
+from ._catalog import accepted_props, charts, host_catalog, options_of, snake
 from ._closest import closest, did_you_mean
 from .data import Row, cell, columns_of, to_rows
 from .errors import SpecError
@@ -32,8 +32,12 @@ def chart_entry(slug: str) -> dict[str, Any]:
 
 
 def _check_options(slug: str, entry: dict[str, Any], options: Mapping[str, Any]) -> dict[str, Any]:
-    """Options keyed by the library's (camel-case) names, each known and within its ``values``."""
+    """Options keyed by the library's (camel-case) names, each known to the engine and, when the host
+    catalog declares it, within its ``values``. The engine takes more props than the catalog declares
+    (``names``, ``nodes``, ``seed``): those pass as given, as ``specFromTable`` passes them (issue #2)."""
     declared = {o["name"]: o for o in options_of(entry)}
+    for name in accepted_props(slug):
+        declared.setdefault(name, {"name": name})
     by_snake = {snake(name): name for name in declared}
     out: dict[str, Any] = {}
     unknown: list[str] = []

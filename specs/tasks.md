@@ -120,3 +120,24 @@ clean; `node scripts/conformance.mjs`: 76 passed, 0 failed.
   was already in 0.11.0, re-verified against the requirement text: `limit(SPARK_ROW_LIMIT + 1)`, Arrow
   before pandas, `ValueError` naming the limit, the `RuntimeWarning` in Databricks, the size bounds in
   `test_notebook.py`.
+
+## Ledger (2026-11-22) — issue #2, `demo.options` refused
+
+- **Cause.** `spec._check_options` accepted only `options_of(entry)` (the catalog's options plus
+  `common`). `specFromTable` passes `options` into `props` and `validateSpec` checks them against the
+  engine's per-chart prop table plus a common list, minus the spec fields: wider than the catalog
+  (`names`, `nodes`; `seed`, `numberFormat`, `className`). PY-REQ-001 broke for those inputs.
+- **Fix.** `vendor.py` derives `_vendor/props.json` from the vendored `.mjs` (tables found by content —
+  the object keyed by exactly the catalog's slugs, the array holding every common option — not by
+  minified names; ambiguity fails the vendoring) and `verify()` / `--check` re-derive and compare.
+  `_check_options` accepts those props; declared options keep their `values` check. Regenerated with
+  `vendor.py 0.11.0`: the only change under `_vendor/` is the new `props.json`.
+- **Tests first** (red, then green): `test_spec.py::test_every_demo_builds_with_its_options` (all 56
+  bindable demos), `::test_every_demo_equals_spec_from_table` (Node), `::test_unknown_prop_is_still_refused`,
+  `::test_engine_props_beyond_the_declared_options`; `test_vendor.py::test_wheel_contents` includes
+  `props.json`. `uv run pytest`: 168 passed, 2 skipped (pyspark not installed); `ruff`,
+  `vendor.py --check`, `make_builders.py --check` clean.
+- Not changed: an appearance or size key inside `options` (`ground`) is still `kind == "prop"` here,
+  where `specFromTable` says `shape` ("give it as a field of the spec"). Builders still expose only the
+  declared options.
+

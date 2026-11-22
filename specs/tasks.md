@@ -141,3 +141,17 @@ clean; `node scripts/conformance.mjs`: 76 passed, 0 failed.
   where `specFromTable` says `shape` ("give it as a field of the spec"). Builders still expose only the
   declared options.
 
+
+## Ledger (2026-11-22) — release 0.11.0.post1
+
+- PR #3 (`develop` → `main`, the fix for issue #2) with CI green (test 3.10 and 3.13, spark, bare);
+  issue #2 closed by the commit. PR #4 set the version to `0.11.0.post1` (`pyproject.toml`,
+  `__version__`, `uv.lock`) and dated the CHANGELOG entry; it still vendors `@silverpoint/embed` 0.11.0
+  (PY-DD-01, a Python-only fix).
+- Tag `v0.11.0.post1` on `main`; `release.yml` (`vendor.py --check`, conformance, `pytest -m "not
+  browser"`) published `silverpoint` 0.11.0.post1 to PyPI through Trusted Publishing (wheel
+  `py3-none-any` and sdist). A fresh install from PyPI reports `0.11.0.post1` / `0.11.0`, and
+  `dumbbell-chart`'s demo with `demo.options` builds (`names, labelKey, startKey, endKey`). GitHub
+  release `v0.11.0.post1` with the CHANGELOG's notes.
+- Downstream: silverpoint-knime can pin `silverpoint==0.11.0.post1` and drop its strict `xfail`
+  (deviation KN-D5) for the three demos.

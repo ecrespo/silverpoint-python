@@ -9,11 +9,11 @@ are binding:
   pyarrow, pyspark (delta-001), Flask and Django are detected, never imported at module load (`tests/test_data.py` checks).
 - **PY-Art. 3 — Self-contained output.** HTML the package writes works with no network. Never a CDN URL.
 
-Specs: `specs/prd.md` (PY-REQ-001..016), `specs/technical-design.md` (PY-DD-01..05), `specs/tasks.md`
-(PY-T-01..13 and the ledger). `specs/spec-pack.md` is the pack as written in silverpoint's
-`changes/feature-007-bi-hosts/repositories/`; the four files are its split, unchanged.
-`changes/delta-001-databricks.md` (Spark inputs, `enable()` in Databricks, the example notebook;
-PY-REQ-017..018, PY-T-14..16) is implemented and waits for review before it is folded into `specs/`.
+Specs: `specs/prd.md` (PY-REQ-001..018), `specs/technical-design.md` (PY-DD-01..06), `specs/tasks.md`
+(PY-T-01..16 and the ledger). `specs/spec-pack.md` is the pack as written in silverpoint's
+`changes/feature-007-bi-hosts/repositories/`; the four files are its split plus the deltas folded
+since. Active proposals go in `changes/`; a delta folded into `specs/` moves to `changes/archive/`
+(delta-001, Databricks, folded 2026-11-22). `0.11.0` is released on PyPI.
 
 Working rules:
 

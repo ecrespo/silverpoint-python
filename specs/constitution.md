@@ -9,7 +9,8 @@ H-1..H-8 ([`README.md`](README.md) §3), and:
 - **PY-Art. 1 — No picture is made in Python.** THE PACKAGE SHALL build a chart spec and the markup
   that carries it, and nothing else. It SHALL hold no geometry, no scale, no colour and no layout.
 - **PY-Art. 2 — No required dependency.** THE BASE INSTALL SHALL depend on nothing but the standard
-  library. pandas, polars, pyarrow, Flask and Django are detected, never imported at module load.
+  library. pandas, polars, pyarrow, pyspark (delta-001), Flask and Django are detected, never imported
+  at module load.
 - **PY-Art. 3 — Self-contained output.** HTML THE PACKAGE WRITES SHALL work with no network: the
   script is inlined or served by the application itself. It SHALL never write a CDN URL.
 

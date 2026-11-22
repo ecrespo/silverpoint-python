@@ -1,6 +1,7 @@
 # `silverpoint-python` — Technical design
 
-> Split from `specs/spec-pack.md` (silverpoint feature-007, `repositories/`), content unchanged.
+> Split from `specs/spec-pack.md` (silverpoint feature-007, `repositories/`). Since then: delta-001
+> (Databricks; approved 2026-11-22) adds PY-DD-06 and a note to PY-DD-04.
 
 ## Design decisions
 
@@ -21,9 +22,18 @@
   runs, and Databricks renders HTML in a frame of its own. A `srcdoc` frame with
   `sandbox="allow-scripts"` behaves the same everywhere and keeps the chart's stylesheet off the
   notebook's. Cost: the script travels with each chart unless PY-REQ-008 applies.
+  In Databricks every output is its own frame, so PY-REQ-008 never applies there: `enable()` warns
+  and changes nothing (delta-001).
 - **PY-DD-05 — Flask and Django are sub-packages** (silverpoint D3), each importing its framework
   only inside its own module. Extras `silverpoint[flask]`, `silverpoint[django]` declare the
   frameworks' minimum versions and nothing else.
+- **PY-DD-06 — A Spark table is read bounded, on the driver** (delta-001). pyspark is recognised by
+  the module of the object's type, never imported (PY-Art. 2). `data.py` takes
+  `limit(SPARK_ROW_LIMIT + 1)`, collects it through `toArrow` where it exists (Spark 4, Spark Connect)
+  or `toPandas` otherwise, and refuses the table if the extra row came back: a chart never collects a
+  large table, and an aggregation is asked for in Spark rather than done in Python (server-side
+  aggregation stays out of scope). No extra: pyspark is the runtime's, and is tested in the `spark`
+  dependency group.
 
 ## Structure
 

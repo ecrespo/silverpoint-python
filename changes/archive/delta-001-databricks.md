@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Implemented 2026-11-21, to review (user request, 2026-11-21: "implementa lo que falta para databricks") |
+| **Status** | Approved and folded into `specs/` 2026-11-22 (user decision); implemented 2026-11-21, released in `0.11.0` |
 | **Amends** | PY-REQ-002, PY-REQ-008; adds PY-REQ-017, PY-REQ-018; answers part of PY-OQ-1 |
 | **Release** | `0.11.0` (the first release; nothing is published yet, so no version moves) |
 

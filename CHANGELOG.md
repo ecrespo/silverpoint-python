@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (0.11.0.post1)
+## 0.11.0.post1 (2026-11-22)
 
 - Fix (#2): `Chart` and the builders refused props that `specFromTable` accepts but the host catalog
   does not declare as options — `names` (`dumbbell-chart`, `slope-chart`), `nodes` (`network-chart`),

@@ -1,0 +1,12 @@
+{
+ "ampersand-entities.json": "{\"chart\":\"bar-chart\",\"props\":{\"title\":\"\\u0026lt;b\\u0026gt; \\u0026amp; \\u0026#60;\"}}",
+ "attribute-break-in-id-label.json": "{\"chart\":\"donut-chart\",\"props\":{\"title\":\"\\\" onload=\\\"alert(1)\",\"label\":\"' onmouseover='x\"}}",
+ "comment-open-in-badge.json": "{\"chart\":\"bar-chart\",\"props\":{\"badge\":\"\\u003c!--\",\"footerLeft\":\"--\\u003e\"}}",
+ "hostile-palette.json": "{\"chart\":\"bar-chart\",\"palette\":{\"ink\":\"red;}\\u003c/style\\u003e\\u003cscript\\u003ealert(1)\\u003c/script\\u003e\"}}",
+ "img-onerror-in-data.json": "{\"chart\":\"bar-chart\",\"data\":[{\"x\":\"\\u003cimg src=x onerror=alert(1)\\u003e\",\"value\":3},{\"x\":\"B\",\"value\":2}]}",
+ "javascript-url-in-footer.json": "{\"chart\":\"bar-chart\",\"props\":{\"footerRight\":\"javascript:alert(1)\"}}",
+ "line-separators.json": "{\"chart\":\"line-chart\",\"props\":{\"title\":\"a\\u2028b\\u2029c\"}}",
+ "script-close-in-title.json": "{\"chart\":\"bar-chart\",\"props\":{\"title\":\"\\u003c/script\\u003e\\u003cscript\\u003ealert(1)\\u003c/script\\u003e\"}}",
+ "svg-onload-column.json": "{\"chart\":\"bar-chart\",\"props\":{\"xKey\":\"\\u003csvg onload=alert(1)\\u003e\"},\"data\":[{\"\\u003csvg onload=alert(1)\\u003e\":\"A\",\"value\":1}]}",
+ "unicode-names.json": "{\"chart\":\"bar-chart\",\"data\":[{\"x\":\"日本 😀\",\"value\":5}],\"props\":{\"title\":\"Ünïcödé — ✓\"}}"
+}

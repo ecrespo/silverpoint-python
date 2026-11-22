@@ -1,0 +1,58 @@
+name: ci
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.10", "3.13"]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run python scripts/vendor.py --check
+      - run: uv run python scripts/make_builders.py --check
+      - run: node scripts/conformance.mjs
+      - run: uv run playwright install --with-deps chromium
+      - run: uv run pytest
+
+  # delta-001: Spark DataFrames and the Databricks example notebook, on a local Spark session.
+  spark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+      - run: uv sync --locked --group spark
+      - run: uv run pytest tests/test_spark.py tests/test_examples.py tests/test_data.py
+
+  # PY-Art. 2: the base install, with none of the optional libraries.
+  bare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv venv && uv pip install . pytest
+      - run: uv run --no-sync pytest tests/test_spec.py tests/test_data.py tests/test_html.py tests/test_notebook.py tests/test_builders.py -k "not generated_files"
